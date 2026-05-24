@@ -1,0 +1,10 @@
+node_modules
+dist
+.git
+.env
+logs/*
+storage/*
+!.gitkeep
+npm-debug.log
+.DS_Store
+*.zip
