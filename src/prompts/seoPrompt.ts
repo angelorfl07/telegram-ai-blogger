@@ -1,6 +1,6 @@
 import { chooseTemplate } from './templates';
 
-export function buildSeoArticlePrompt(topic: string, mode: 'new' | 'rewrite' = 'new'): string {
+export function buildSeoArticlePrompt(topic: string, mode: 'new' | 'rewrite' = 'new', imageStyle: string = 'Fotorrealista Premium'): string {
   const template = chooseTemplate(topic);
   const rewriteInstruction = mode === 'rewrite'
     ? 'Reescreva completamente a versão anterior implícita, mantendo o tema, elevando clareza, profundidade e SEO sem duplicar frases.'
@@ -9,7 +9,7 @@ export function buildSeoArticlePrompt(topic: string, mode: 'new' | 'rewrite' = '
   return `Você é especialista sênior em SEO técnico, copywriter, jornalista de tecnologia e estrategista de Google Discover.
 
 Tema: ${topic}
-Tarefa: ${rewriteInstruction}
+Tarefas: ${rewriteInstruction}
 Template SEO selecionado: ${template.name}
 Intenção do template: ${template.intent}
 Estrutura editorial recomendada: ${template.structure.join(' > ')}
@@ -22,7 +22,7 @@ Requisitos editoriais obrigatórios:
 - Conteúdo completo com introdução forte, H2/H3 otimizados, conclusão e CTA final.
 - Inclua FAQ schema, JSON-LD Article/FAQPage, tags e keywords estratégicas.
 - Não invente dados específicos, datas, estatísticas ou citações sem fonte. Quando faltarem dados externos, escreva de forma conceitual e evergreen.
-- Gere também um prompt de imagem sem texto, horizontal, tecnológico moderno, dark mode, neon blue, cyberpunk, IA futurista e minimalista profissional.
+- Gere também um prompt de imagem detalhado em inglês (para ser usado no Midjourney/DALL-E) que siga rigidamente o estilo de arte selecionado a seguir: "${imageStyle}". Não coloque texto na imagem gerada, e foque em visual de alta qualidade.
 
 Responda exclusivamente em JSON válido, sem markdown fora do JSON, com este schema:
 {

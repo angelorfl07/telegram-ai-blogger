@@ -3,13 +3,13 @@ import axios, { AxiosInstance } from 'axios';
 import FormData from 'form-data';
 import jwt from 'jsonwebtoken';
 import { env } from '../config/env';
-import type { GeneratedPost, GhostPublishedPost } from '../types';
+import type { GeneratedPost, GhostPublishedPost, SiteConfig } from '../types';
 import { appendJsonLdToHtml, buildMergedJsonLd } from '../seo/jsonLd';
 import { withRetry } from '../utils/retry';
 
-function buildAdminToken(): string {
-  const [id, secret] = env.GHOST_ADMIN_KEY.split(':');
-  if (!id || !secret) throw new Error('GHOST_ADMIN_KEY deve estar no formato id:secret.');
+function buildAdminToken(site: SiteConfig): string {
+  const [id, secret] = site.adminKey.split(':');
+  if (!id || !secret) throw new Error('A Admin Key do Ghost deve estar no formato id:secret.');
   return jwt.sign({}, Buffer.from(secret, 'hex'), {
     keyid: id,
     algorithm: 'HS256',
@@ -18,28 +18,28 @@ function buildAdminToken(): string {
   });
 }
 
-function client(): AxiosInstance {
+function client(site: SiteConfig): AxiosInstance {
   return axios.create({
-    baseURL: env.GHOST_ADMIN_API_URL.replace(/\/$/, ''),
+    baseURL: site.apiUrl.replace(/\/$/, ''),
     timeout: env.REQUEST_TIMEOUT_MS,
-    headers: { Authorization: `Ghost ${buildAdminToken()}` },
+    headers: { Authorization: `Ghost ${buildAdminToken(site)}` },
   });
 }
 
-export async function uploadImageToGhost(imagePath: string): Promise<string> {
+export async function uploadImageToGhost(imagePath: string, site: SiteConfig): Promise<string> {
   return withRetry(async () => {
     const form = new FormData();
     form.append('file', fs.createReadStream(imagePath));
     form.append('purpose', 'image');
-    const response = await client().post('/images/upload/', form, { headers: form.getHeaders() });
+    const response = await client(site).post('/images/upload/', form, { headers: form.getHeaders() });
     return response.data?.images?.[0]?.url as string;
   }, 'ghost.uploadImage', env.RETRY_ATTEMPTS);
 }
 
-export async function publishPostToGhost(generated: GeneratedPost): Promise<GhostPublishedPost> {
+export async function publishPostToGhost(generated: GeneratedPost, site: SiteConfig): Promise<GhostPublishedPost> {
   return withRetry(async () => {
     let featureImage: string | undefined;
-    if (generated.image?.localPath) featureImage = await uploadImageToGhost(generated.image.localPath);
+    if (generated.image?.localPath) featureImage = await uploadImageToGhost(generated.image.localPath, site);
 
     const article = generated.article;
     const schemas = buildMergedJsonLd(article);
@@ -60,9 +60,9 @@ export async function publishPostToGhost(generated: GeneratedPost): Promise<Ghos
       }],
     };
 
-    if (env.GHOST_AUTHOR_ID) payload.posts[0].authors = [{ id: env.GHOST_AUTHOR_ID }];
+    if (site.authorId) payload.posts[0].authors = [{ id: site.authorId }];
 
-    const response = await client().post('/posts/?source=html', payload);
+    const response = await client(site).post('/posts/?source=html', payload);
     const post = response.data?.posts?.[0];
     if (!post?.url) throw new Error('Ghost não retornou URL publicada.');
     return { id: post.id, title: post.title, slug: post.slug, url: post.url, status: post.status };

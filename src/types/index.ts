@@ -64,3 +64,11 @@ export interface GhostPublishedPost {
   url: string;
   status: string;
 }
+
+export interface SiteConfig {
+  id: string;
+  url: string;
+  apiUrl: string;
+  adminKey: string;
+  authorId: string;
+}

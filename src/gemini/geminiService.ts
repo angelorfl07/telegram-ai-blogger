@@ -47,11 +47,11 @@ function normalizeArticle(raw: Partial<SeoArticle>, topic: string): SeoArticle {
   return article;
 }
 
-export async function generateSeoArticle(topic: string, mode: 'new' | 'rewrite' = 'new'): Promise<SeoArticle> {
+export async function generateSeoArticle(topic: string, mode: 'new' | 'rewrite' = 'new', imageStyle: string = 'Fotorrealista Premium'): Promise<SeoArticle> {
   return withRetry(async () => {
     const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${env.GEMINI_MODEL}:generateContent?key=${env.GEMINI_API_KEY}`;
     const response = await axios.post(endpoint, {
-      contents: [{ role: 'user', parts: [{ text: buildSeoArticlePrompt(topic, mode) }] }],
+      contents: [{ role: 'user', parts: [{ text: buildSeoArticlePrompt(topic, mode, imageStyle) }] }],
       generationConfig: {
         temperature: env.GEMINI_TEMPERATURE,
         responseMimeType: 'application/json',
